@@ -12,6 +12,7 @@ class Direction(enum.Enum):
 class NodeShape(enum.Enum):
     ROUND = {"open": "(", "close": ")"}
     SQUARE = {"open": "[", "close": "]"}
+    STADIUM = {"open": "([", "close": "])"}
 
     @property
     def open(self) -> str:
@@ -27,12 +28,18 @@ class Node:
     value: str
     shape: NodeShape = NodeShape.ROUND
 
+    def __hash__(self):
+        return hash((self.value, self.shape.name))
+
 
 @dataclass
 class Link:
-    _from: Node
+    from_: Node
     to: Node
     text: str | None
+
+    def __hash__(self):
+        return hash((self.from_, self.to))
 
 
 class MermaidDiagram:
@@ -67,18 +74,30 @@ graph {self.direction.value}
     def _aggregate_nodes(self) -> str:
         node_str = ""
         for node in self.nodes:
-            node_str += f'{" " * 4}{node.value.replace(" ", "_")}{node.shape.open}"{node.value}"{node.shape.close}\n'
+            node_str += f'{" " * 4}{self._fix_name(node.value)}{node.shape.open}"{node.value}"{node.shape.close}\n'
         return node_str
 
     def _aggregate_links(self) -> str:
         link_str = ""
         for link in self.links:
-            _from = link._from.value.replace(" ", "_")
-            to = link.to.value.replace(" ", "_")
+            from_ = self._fix_name(link.from_.value)
+            to = self._fix_name(link.to.value)
 
             arrow = "-->"
             if link.text is not None:
                 arrow = f"--|{link.text}|-->"
 
-            link_str += f'{" " * 4}{_from} {arrow} {to}\n'
+            link_str += f'{" " * 4}{from_} {arrow} {to}\n'
         return link_str
+
+    def _fix_name(self, value: str) -> str:
+        # TODO: use regex
+        return (
+            value.replace(" ", "_")
+            .replace("?", "_")
+            .replace("{", "_")
+            .replace("}", "_")
+            .replace("'", "_")
+            .replace(":", "_")
+            .replace(",", "_")
+        )
