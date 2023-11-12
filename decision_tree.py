@@ -3,6 +3,8 @@ from typing import NewType, Union
 import numpy as np
 import pandas as pd
 
+import mermaid
+
 
 @dataclass
 class Attribute:
@@ -48,6 +50,7 @@ class DecisionTree:
         feature_names: list[str],
         positive_label: str,
         negative_label: str,
+        depth_threshold: int = 10,
     ):
         self.df = train_data
         self.class_name = class_name
@@ -57,6 +60,7 @@ class DecisionTree:
         # Contains a dict of feature: attribute
         self.visited_features: VisitedFeatures | None = None
         self.root: Node | None = None
+        self.depth_threshold = depth_threshold
 
     def train(self):
         """
@@ -70,15 +74,57 @@ class DecisionTree:
         """
         self.root = self._generate_subtree(self.feature_names)
 
-    def mermaid(self) -> str:
+    def mermaid_diagram(self) -> str:
         """
         Create a Mermaid diagram of a tree
         """
-        return ""
+        mermaid_nodes: set[mermaid.Node] = set()
+        mermaid_links: set[mermaid.Link] = set()
+
+        self._prepare_mermaid_data(self.root, mermaid_nodes, mermaid_links)
+
+        diagram = mermaid.MermaidDiagram(
+            mermaid_nodes, mermaid_links, direction=mermaid.Direction.TB
+        )
+
+        return diagram.draw()
 
     def clear(self):
         self.root = None
         self.visited_features = None
+
+    def _prepare_mermaid_data(
+        self,
+        node: Node,
+        mermaid_nodes: set[mermaid.Node],
+        mermaid_links: set[mermaid.Link],
+    ):
+        if node.children is None:
+            return
+
+        mermaid_node = self._create_mermaid_node(node)
+        mermaid_nodes.add(mermaid_node)
+
+        for link_text, child in node.children.items():
+            child_node = self._create_mermaid_node(child)
+            mermaid_nodes.add(child_node)
+            mermaid_links.add(mermaid.Link(mermaid_node, child_node, link_text))
+            self._prepare_mermaid_data(child, mermaid_nodes, mermaid_links)
+
+    def _create_mermaid_node(self, node: Node) -> mermaid.Node:
+        if node.answer is not None:
+            return mermaid.Node(
+                value=f"Play?: {node.answer}", shape=mermaid.NodeShape.SQUARE
+            )
+
+        if node.is_probabalistic():
+            probabilities = ",".join([f"{k}: {v}" for k, v in node.answer.items()])
+            return mermaid.Node(
+                value=f"Play?: {probabilities}",
+                shape=mermaid.NodeShape.STADIUM,
+            )
+
+        return mermaid.Node(value=node.label)
 
     def _generate_subtree(
         self,
@@ -90,7 +136,7 @@ class DecisionTree:
         if len(feature_names) == 0:
             return None
 
-        if depth > 10:
+        if depth > self.depth_threshold:
             return None
 
         if self.visited_features is None:
