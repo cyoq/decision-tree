@@ -31,15 +31,17 @@ def main():
     #         }
     #     )
     # )
-    print(
-        tree.predict(
-            {
-                "fever": "No",
-                "short_of_breath": "Yes",
-                "cough": "Yes",
-            }
+    # 10 predictions of a probability node
+    for _ in range(10):
+        print(
+            tree.predict(
+                {
+                    "fever": "No",
+                    "short_of_breath": "Yes",
+                    "cough": "Yes",
+                }
+            )
         )
-    )
 
 
 if __name__ == "__main__":

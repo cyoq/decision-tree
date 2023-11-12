@@ -93,7 +93,7 @@ class DecisionTree:
         except KeyError:
             # TODO: add a hint what are the correct features
             raise KeyError(
-                f"Incorrectly created query, {pointer} does not exist as a query key"
+                f"Incorrectly created query, {pointer.label} does not exist as a query key"
             )
 
     def mermaid_diagram_str(self) -> str:
