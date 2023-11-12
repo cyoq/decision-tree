@@ -8,11 +8,11 @@ def load_train_data(csv_file: str, sep: str = ";") -> pd.DataFrame:
 
 
 def main():
-    # df = load_train_data("./example.csv")
+    # df = load_train_data("./dataset/example.csv")
     # class_name = "Play"
     # feature_names = ["Outlook", "Temperature", "Humidity", "Windy"]
 
-    df = load_train_data("./id3.csv")
+    df = load_train_data("./dataset/id3.csv")
     class_name = "infected_with_X_disease"
     feature_names = ["fever", "cough", "short_of_breath"]
 
