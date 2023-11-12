@@ -74,7 +74,7 @@ class DecisionTree:
         """
         self.root = self._generate_subtree(self.feature_names)
 
-    def mermaid_diagram(self) -> str:
+    def mermaid_diagram_str(self) -> str:
         """
         Create a Mermaid diagram of a tree
         """
@@ -93,6 +93,19 @@ class DecisionTree:
         )
 
         return diagram.draw()
+
+    def create_mermaid_md(self, filename: str):
+        diagram = self.mermaid_diagram_str()
+        result = f"""
+# Diagram
+
+```mermaid
+{diagram}
+```
+
+"""
+        with open(filename, "w") as f:
+            f.write(result)
 
     def clear(self):
         self.root = None

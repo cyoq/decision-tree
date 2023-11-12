@@ -1,7 +1,7 @@
 import pytest
 import pandas as pd
 
-from project.decision_tree import DecisionTree, Node, VisitedFeatures
+import project.decision_tree as dt
 
 
 @pytest.fixture(
@@ -16,8 +16,8 @@ def df() -> pd.DataFrame:
 @pytest.fixture(
     scope="module",
 )
-def tree(df: pd.DataFrame) -> DecisionTree:
-    tree = DecisionTree(
+def tree(df: pd.DataFrame) -> dt.DecisionTree:
+    tree = dt.DecisionTree(
         df, "Play", ["Outlook", "Temperature", "Humidity", "Windy"], "Yes", "No"
     )
     yield tree
@@ -41,32 +41,32 @@ class TestDecisionTree:
     )
     def test_create_filter(
         self,
-        tree: DecisionTree,
-        visited_features: VisitedFeatures,
+        tree: dt.DecisionTree,
+        visited_features: dt.VisitedFeatures,
         expected_output: str,
     ):
         tree.visited_features = visited_features
         assert tree._create_filter() == expected_output
         tree.clear()
 
-    def test_create_tree(self, tree: DecisionTree):
-        expected_tree = Node(
+    def test_create_tree(self, tree: dt.DecisionTree):
+        expected_tree = dt.Node(
             label="Outlook",
             children={
-                "Sunny": Node(
+                "Sunny": dt.Node(
                     label="Humidity",
                     children={
-                        "High": Node(label="Play", children=None, answer="No"),
-                        "Normal": Node(label="Play", children=None, answer="Yes"),
+                        "High": dt.Node(label="Play", children=None, answer="No"),
+                        "Normal": dt.Node(label="Play", children=None, answer="Yes"),
                     },
                     answer=None,
                 ),
-                "Overcast": Node(label="Play", children=None, answer="Yes"),
-                "Rainy": Node(
+                "Overcast": dt.Node(label="Play", children=None, answer="Yes"),
+                "Rainy": dt.Node(
                     label="Windy",
                     children={
-                        False: Node(label="Play", children=None, answer="Yes"),
-                        True: Node(label="Play", children=None, answer="No"),
+                        False: dt.Node(label="Play", children=None, answer="Yes"),
+                        True: dt.Node(label="Play", children=None, answer="No"),
                     },
                     answer=None,
                 ),
