@@ -50,18 +50,18 @@ graph TB
     node_fever_No("fever")
     leaf_No_No["Play?: No"]
     node_cough_Yes("cough")
-    leaf_No_2_Yes_1_Yes["Play?: {'No': 2, 'Yes': 1}"]
+    leaf_prob_No_2_Yes_1_Yes(["Play?: No: 2,Yes: 1"])
     node_fever_Yes("fever")
     node_cough_No("cough")
-    leaf_Yes_2_No_1_Yes["Play?: {'Yes': 2, 'No': 1}"]
+    leaf_prob_Yes_2_No_1_Yes(["Play?: Yes: 2,No: 1"])
     leaf_Yes_Yes["Play?: Yes"]
 
     node_short_of_breath_ -->|No| node_fever_No
     node_fever_No -->|No| leaf_No_No
     node_fever_No -->|Yes| node_cough_Yes
-    node_cough_Yes -->|Yes| leaf_No_2_Yes_1_Yes
+    node_cough_Yes -->|Yes| leaf_prob_No_2_Yes_1_Yes
     node_short_of_breath_ -->|Yes| node_fever_Yes
     node_fever_Yes -->|No| node_cough_No
-    node_cough_No -->|Yes| leaf_Yes_2_No_1_Yes
+    node_cough_No -->|Yes| leaf_prob_Yes_2_No_1_Yes
     node_fever_Yes -->|Yes| leaf_Yes_Yes
 ```

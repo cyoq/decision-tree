@@ -37,7 +37,7 @@ class Node:
     answer: str | dict[str, int] | None
 
     def is_probabilistic(self) -> bool:
-        return isinstance(self.answer, str)
+        return isinstance(self.answer, dict)
 
 
 VisitedFeatures = dict[str, Union[str, bool]]
@@ -156,19 +156,19 @@ class DecisionTree:
         """
         Create a mermaid node from a tree node
         """
-        if node.answer is not None:
-            return mermaid.Node(
-                name=f"leaf_{node.answer}_{edge}",
-                value=f"Play?: {node.answer}",
-                shape=mermaid.NodeShape.SQUARE,
-            )
-
         if node.is_probabilistic():
             probabilities = ",".join([f"{k}: {v}" for k, v in node.answer.items()])
             return mermaid.Node(
                 name=f"leaf_prob_{probabilities}_{edge}",
                 value=f"Play?: {probabilities}",
                 shape=mermaid.NodeShape.STADIUM,
+            )
+
+        if node.answer is not None:
+            return mermaid.Node(
+                name=f"leaf_{node.answer}_{edge}",
+                value=f"Play?: {node.answer}",
+                shape=mermaid.NodeShape.SQUARE,
             )
 
         return mermaid.Node(value=node.label, name=f"node_{node.label}_{edge}")
