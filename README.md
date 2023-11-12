@@ -2,6 +2,8 @@
 
 Check decision tree creation here: <https://planetcalc.com/8443/>
 
+Requirements: pandas and numpy
+
 Run the tree:
 
 ```bash
