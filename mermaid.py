@@ -27,9 +27,29 @@ class NodeShape(enum.Enum):
 class Node:
     value: str
     shape: NodeShape = NodeShape.ROUND
+    name: str | None = None
+    has_random_end: bool = False
 
     def __hash__(self):
         return hash((self.value, self.shape.name))
+
+    def __post_init__(self):
+        if self.name is None:
+            self.name = self._fix_value(self.value)
+        else:
+            self.name = self._fix_value(self.name)
+
+    def _fix_value(self, value: str) -> str:
+        # TODO: use regex
+        return (
+            value.replace(" ", "_")
+            .replace("?", "_")
+            .replace("{", "_")
+            .replace("}", "_")
+            .replace("'", "_")
+            .replace(":", "_")
+            .replace(",", "_")
+        )
 
 
 @dataclass
@@ -74,14 +94,14 @@ graph {self.direction.value}
     def _aggregate_nodes(self) -> str:
         node_str = ""
         for node in self.nodes:
-            node_str += f'{" " * 4}{self._fix_name(node.value)}{node.shape.open}"{node.value}"{node.shape.close}\n'
+            node_str += f'{" " * 4}{node.name}{node.shape.open}"{node.value}"{node.shape.close}\n'
         return node_str
 
     def _aggregate_links(self) -> str:
         link_str = ""
         for link in self.links:
-            from_ = self._fix_name(link.from_.value)
-            to = self._fix_name(link.to.value)
+            from_ = link.from_.name
+            to = link.to.name
 
             arrow = "-->"
             if link.text is not None:
@@ -89,15 +109,3 @@ graph {self.direction.value}
 
             link_str += f'{" " * 4}{from_} {arrow} {to}\n'
         return link_str
-
-    def _fix_name(self, value: str) -> str:
-        # TODO: use regex
-        return (
-            value.replace(" ", "_")
-            .replace("?", "_")
-            .replace("{", "_")
-            .replace("}", "_")
-            .replace("'", "_")
-            .replace(":", "_")
-            .replace(",", "_")
-        )

@@ -78,10 +78,15 @@ class DecisionTree:
         """
         Create a Mermaid diagram of a tree
         """
-        mermaid_nodes: set[mermaid.Node] = set()
-        mermaid_links: set[mermaid.Link] = set()
+        # Create a mermaid node for a root node
+        mermaid_root = self._create_mermaid_node(self.root, "")
+        mermaid_nodes: list[mermaid.Node] = [mermaid_root]
+        mermaid_links: list[mermaid.Link] = list()
 
-        self._prepare_mermaid_data(self.root, mermaid_nodes, mermaid_links)
+        # Fill in mermaid data
+        self._prepare_mermaid_data(
+            self.root, mermaid_root, mermaid_nodes, mermaid_links
+        )
 
         diagram = mermaid.MermaidDiagram(
             mermaid_nodes, mermaid_links, direction=mermaid.Direction.TB
@@ -96,35 +101,36 @@ class DecisionTree:
     def _prepare_mermaid_data(
         self,
         node: Node,
-        mermaid_nodes: set[mermaid.Node],
-        mermaid_links: set[mermaid.Link],
+        prev_mermaid_node: mermaid.Node,
+        mermaid_nodes: list[mermaid.Node],
+        mermaid_links: list[mermaid.Link],
     ):
         if node.children is None:
             return
 
-        mermaid_node = self._create_mermaid_node(node)
-        mermaid_nodes.add(mermaid_node)
+        for edge, child in node.children.items():
+            child_node = self._create_mermaid_node(child, edge)
+            mermaid_nodes.append(child_node)
+            mermaid_links.append(mermaid.Link(prev_mermaid_node, child_node, edge))
+            self._prepare_mermaid_data(child, child_node, mermaid_nodes, mermaid_links)
 
-        for link_text, child in node.children.items():
-            child_node = self._create_mermaid_node(child)
-            mermaid_nodes.add(child_node)
-            mermaid_links.add(mermaid.Link(mermaid_node, child_node, link_text))
-            self._prepare_mermaid_data(child, mermaid_nodes, mermaid_links)
-
-    def _create_mermaid_node(self, node: Node) -> mermaid.Node:
+    def _create_mermaid_node(self, node: Node, edge: str) -> mermaid.Node:
         if node.answer is not None:
             return mermaid.Node(
-                value=f"Play?: {node.answer}", shape=mermaid.NodeShape.SQUARE
+                name=f"leaf_{node.answer}_{edge}",
+                value=f"Play?: {node.answer}",
+                shape=mermaid.NodeShape.SQUARE,
             )
 
         if node.is_probabalistic():
             probabilities = ",".join([f"{k}: {v}" for k, v in node.answer.items()])
             return mermaid.Node(
+                name=f"leaf_prob_{probabilities}_{edge}",
                 value=f"Play?: {probabilities}",
                 shape=mermaid.NodeShape.STADIUM,
             )
 
-        return mermaid.Node(value=node.label)
+        return mermaid.Node(value=node.label, name=f"node_{node.label}_{edge}")
 
     def _generate_subtree(
         self,
