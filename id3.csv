@@ -1,4 +1,4 @@
-fever;cough;short_of_breath;infected with X disease
+fever;cough;short_of_breath;infected_with_X_disease
 No;No;No;No
 Yes;Yes;Yes;Yes
 Yes;Yes;No;No
