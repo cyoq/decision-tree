@@ -20,7 +20,26 @@ def main():
     tree.train()
     print(tree.root)
     print(tree.mermaid_diagram_str())
-    tree.create_mermaid_md("new_diagram.md")
+    # tree.create_mermaid_md("new_diagram.md")
+    # print(
+    #     tree.predict(
+    #         {
+    #             "Outlook": "Sunny",
+    #             "Humidity": "High",
+    #             "Temperature": "Low",
+    #             "Windy": True,
+    #         }
+    #     )
+    # )
+    print(
+        tree.predict(
+            {
+                "fever": "No",
+                "short_of_breath": "Yes",
+                "cough": "Yes",
+            }
+        )
+    )
 
 
 if __name__ == "__main__":

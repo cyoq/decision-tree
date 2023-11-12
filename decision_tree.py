@@ -74,6 +74,19 @@ class DecisionTree:
         """
         self.root = self._generate_subtree(self.feature_names)
 
+    def predict(self, query: dict[str, str]) -> str:
+        pointer = self.root
+        try:
+            while pointer.answer is None:
+                edge = query[pointer.label]
+                pointer = pointer.children[edge]
+            return pointer.answer
+        except KeyError:
+            # TODO: add helps what are the correct features
+            raise KeyError(
+                f"Incorrectly created query, {pointer} does not exist as a query key"
+            )
+
     def mermaid_diagram_str(self) -> str:
         """
         Create a Mermaid diagram of a tree
@@ -118,6 +131,9 @@ class DecisionTree:
         mermaid_nodes: list[mermaid.Node],
         mermaid_links: list[mermaid.Link],
     ):
+        """
+        Prepare data for a mermaid diagram
+        """
         if node.children is None:
             return
 
@@ -128,6 +144,9 @@ class DecisionTree:
             self._prepare_mermaid_data(child, child_node, mermaid_nodes, mermaid_links)
 
     def _create_mermaid_node(self, node: Node, edge: str) -> mermaid.Node:
+        """
+        Create a mermaid node from a tree node
+        """
         if node.answer is not None:
             return mermaid.Node(
                 name=f"leaf_{node.answer}_{edge}",
