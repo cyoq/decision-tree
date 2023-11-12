@@ -33,10 +33,10 @@ Edge = NewType("Edge", str)
 class Node:
     label: str
     children: dict[Edge, "Node"] | None
-    # dict[str, int] is for probabalistic model
+    # dict[str, int] is for probabilistic model
     answer: str | dict[str, int] | None
 
-    def is_probabalistic(self) -> bool:
+    def is_probabilistic(self) -> bool:
         return isinstance(self.answer, str)
 
 
@@ -163,7 +163,7 @@ class DecisionTree:
                 shape=mermaid.NodeShape.SQUARE,
             )
 
-        if node.is_probabalistic():
+        if node.is_probabilistic():
             probabilities = ",".join([f"{k}: {v}" for k, v in node.answer.items()])
             return mermaid.Node(
                 name=f"leaf_prob_{probabilities}_{edge}",
@@ -179,7 +179,7 @@ class DecisionTree:
         depth: int = 0,
     ) -> Node | None:
         # if we get no feature names, then something is wrong
-        # and we should use probabalistic form
+        # and we should use probabilistic form
         if len(feature_names) == 0:
             return None
 
@@ -220,13 +220,13 @@ class DecisionTree:
                     depth + 1,
                 )
 
-                # We should use a probabalistic form
+                # We should use a probabilistic form
                 # There must be a conflict and no 100% answer
                 if sub_tree is None:
-                    probabalistic_node: Node = self._create_probabalistic_node(
+                    probabilistic_node: Node = self._create_probabilistic_node(
                         max_gain_feature
                     )
-                    children[attr.label] = probabalistic_node
+                    children[attr.label] = probabilistic_node
                 else:
                     children[attr.label] = sub_tree
             # After we took a look at one feature attribute, we remove it to replace it with other attribute
@@ -237,8 +237,8 @@ class DecisionTree:
 
         return sub_tree
 
-    def _create_probabalistic_node(self, prob_feature: str) -> Node:
-        # We use visited_features to recereate a sub tree with the probabalistic view
+    def _create_probabilistic_node(self, prob_feature: str) -> Node:
+        # We use visited_features to recereate a sub tree with the probabilistic view
         mask = " & ".join(
             [
                 f"{feature} == {self._do_quotes(feature, attr)}"
