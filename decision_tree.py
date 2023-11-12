@@ -69,6 +69,9 @@ class DecisionTree:
         visited_features: dict[str, Union[str, bool]] | None = None,
         depth: int = 0,
     ) -> Node | None:
+        if len(feature_names) == 0:
+            return None
+
         if depth > 10:
             return None
 
