@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 import enum
+import re
 
 # Inspired by examples of https://pypi.org/project/python-mermaid/
 
@@ -40,16 +41,7 @@ class Node:
             self.name = self._fix_value(self.name)
 
     def _fix_value(self, value: str) -> str:
-        # TODO: use regex
-        return (
-            value.replace(" ", "_")
-            .replace("?", "_")
-            .replace("{", "_")
-            .replace("}", "_")
-            .replace("'", "_")
-            .replace(":", "_")
-            .replace(",", "_")
-        )
+        return re.sub("[^0-9a-zA-Z]+", "_", value)
 
 
 @dataclass
