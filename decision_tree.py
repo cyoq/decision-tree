@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+import random
 from typing import NewType, Union
 import numpy as np
 import pandas as pd
@@ -80,9 +81,17 @@ class DecisionTree:
             while pointer.answer is None:
                 edge = query[pointer.label]
                 pointer = pointer.children[edge]
-            return pointer.answer
+            # Determinant answer
+            if isinstance(pointer.answer, str):
+                return pointer.answer
+            else:
+                s = sum([v for v in pointer.answer.values()])
+                weights = [v / s for v in pointer.answer.values()]
+                return random.choices(
+                    population=[k for k in pointer.answer.keys()], weights=weights, k=1
+                )[0]
         except KeyError:
-            # TODO: add helps what are the correct features
+            # TODO: add a hint what are the correct features
             raise KeyError(
                 f"Incorrectly created query, {pointer} does not exist as a query key"
             )
