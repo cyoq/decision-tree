@@ -30,7 +30,11 @@ Edge = NewType("Edge", str)
 class Node:
     label: str
     children: dict[Edge, "Node"] | None
-    answer: str | None
+    # dict[str, int] is for probabalistic model
+    answer: str | dict[str, int] | None
+
+    def is_probabalistic(self) -> bool:
+        return isinstance(self.answer, str)
 
 
 VisitedFeatures = dict[str, Union[str, bool]]
@@ -73,6 +77,8 @@ class DecisionTree:
         feature_names: list[str],
         depth: int = 0,
     ) -> Node | None:
+        # if we get no feature names, then something is wrong
+        # and we should use probabalistic form
         if len(feature_names) == 0:
             return None
 
@@ -108,11 +114,20 @@ class DecisionTree:
                     not in [feature for feature in self.visited_features.keys()]
                 ]
 
-                children[attr.label] = self._generate_subtree(
+                sub_tree = self._generate_subtree(
                     investigated_feature_names,
                     depth + 1,
                 )
 
+                # We should use a probabalistic form
+                # There must be a conflict and no 100% answer
+                if sub_tree is None:
+                    probabalistic_node: Node = self._create_probabalistic_node(
+                        max_gain_feature
+                    )
+                    children[attr.label] = probabalistic_node
+                else:
+                    children[attr.label] = sub_tree
             # After we took a look at one feature attribute, we remove it to replace it with other attribute
             # For example, we took a look at {outlook: sunny}, then we remove it to replace with {outlook: rain}
             del self.visited_features[max_gain_feature]
@@ -120,6 +135,20 @@ class DecisionTree:
         sub_tree = Node(label=max_gain_feature, children=children, answer=None)
 
         return sub_tree
+
+    def _create_probabalistic_node(self, prob_feature: str) -> Node:
+        # We use visited_features to recereate a sub tree with the probabalistic view
+        mask = " & ".join(
+            [
+                f"{feature} == {self._do_quotes(feature, attr)}"
+                for feature, attr in self.visited_features.items()
+                if feature != prob_feature
+            ]
+        )
+        probabilities: dict[str, int] = (
+            self.df.query(mask)[self.class_name].value_counts().to_dict()
+        )
+        return Node(label=self.class_name, children=None, answer=probabilities)
 
     def _get_answer(self, feature: str, attribute: str) -> str:
         categories = self.df.query(
