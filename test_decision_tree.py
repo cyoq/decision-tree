@@ -1,7 +1,7 @@
 import pytest
 import pandas as pd
 
-from project.decision_tree import DecisionTree, VisitedFeatures
+from project.decision_tree import DecisionTree, Node, VisitedFeatures
 
 
 @pytest.fixture(
@@ -45,4 +45,33 @@ class TestDecisionTree:
         visited_features: VisitedFeatures,
         expected_output: str,
     ):
-        assert tree._create_filter(visited_features) == expected_output
+        tree.visited_features = visited_features
+        assert tree._create_filter() == expected_output
+        tree.clear()
+
+    def test_create_tree(self, tree: DecisionTree):
+        expected_tree = Node(
+            label="Outlook",
+            children={
+                "Sunny": Node(
+                    label="Humidity",
+                    children={
+                        "High": Node(label="Play", children=None, answer="No"),
+                        "Normal": Node(label="Play", children=None, answer="Yes"),
+                    },
+                    answer=None,
+                ),
+                "Overcast": Node(label="Play", children=None, answer="Yes"),
+                "Rainy": Node(
+                    label="Windy",
+                    children={
+                        False: Node(label="Play", children=None, answer="Yes"),
+                        True: Node(label="Play", children=None, answer="No"),
+                    },
+                    answer=None,
+                ),
+            },
+            answer=None,
+        )
+        tree.train()
+        assert tree.root == expected_tree
