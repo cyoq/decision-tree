@@ -7,9 +7,9 @@ import pandas as pd
 @dataclass
 class Attribute:
     label: str
-    p: int  # positive example size
-    n: int  # negative example size
-    pn: int  # feature size
+    positives: int  # positive data size
+    negatives: int  # negative data size
+    data_size: int  # feature data size
     entropy: float
 
     def is_pure(self) -> bool:
@@ -59,14 +59,22 @@ class DecisionTree:
         self.root: Node | None = None
 
     def train(self):
-        # 1. Calculate overall entropy
-        # 2. Calculate entropy for each feature:
-        #   2.1. Calculate entropy for each unique label
-        #   2.2. Get an average entropy for the feature
-        # 3. Calculate the gain
-        # 4. Choose a feature with max gain
-        # 5. Repeat the process with the child nodes
+        """
+        1. Calculate overall entropy
+        2. Calculate entropy for each feature:
+        2.1. Calculate entropy for each unique label
+        2.2. Get an average entropy for the feature
+        3. Calculate the gain
+        4. Choose a feature with max gain
+        5. Repeat the process with the child nodes
+        """
         self.root = self._generate_subtree(self.feature_names)
+
+    def mermaid(self) -> str:
+        """
+        Create a Mermaid diagram of a tree
+        """
+        return ""
 
     def clear(self):
         self.root = None
@@ -151,10 +159,7 @@ class DecisionTree:
         return Node(label=self.class_name, children=None, answer=probabilities)
 
     def _get_answer(self, feature: str, attribute: str) -> str:
-        categories = self.df.query(
-            f"{self._create_filter()}"
-            # f"{self.df[feature]} == '{attribute}'"
-        )[self.class_name].unique()
+        categories = self.df.query(f"{self._create_filter()}")[self.class_name].unique()
 
         if len(categories) > 1:
             raise ValueError(
@@ -169,32 +174,39 @@ class DecisionTree:
         gains = {name: 0.0 for name in features.keys()}
 
         if len(self.visited_features) == 0:
-            pn = len(self.df)
-            p = len(self.df[self.df[self.class_name] == self.positive_label])
+            data_size = len(self.df)
+            positives = len(self.df[self.df[self.class_name] == self.positive_label])
         else:
-            pn = len(self.df.query(self._create_filter()))
-            p = len(
+            data_size = len(self.df.query(self._create_filter()))
+            positives = len(
                 self.df.query(
                     f"{self._create_filter()} & "
                     f"{self.class_name} == '{self.positive_label}'"
                 )
             )
 
-        n = pn - p
-        h = entropy(p, n, pn)
+        negatives = data_size - positives
+        h = entropy(positives, negatives, data_size)
 
         for name, attributes in features.items():
             gains[name] = h - self._calculate_avg_feature_entropy(attributes)
 
         return gains
 
-    def _do_quotes(self, feature: str, attribute: Union[str, bool]) -> str:
+    def _do_quotes(self, feature: str, attribute: Union[str, bool, int]) -> str:
+        """
+        Pandas query engine requires strings to be in quotes, but
+        ints and booleans without quotes. Strings have Object dtype.
+        """
         typ = self.df[feature].dtype
         if typ == "O":
             return f"'{attribute}'"
         return f"{attribute}"
 
     def _create_filter(self) -> str:
+        """
+        A filter for the visited features
+        """
         if len(self.visited_features) == 0:
             return ""
 
@@ -207,40 +219,46 @@ class DecisionTree:
 
     def _calculate_avg_feature_entropy(self, attributes: list[Attribute]) -> float:
         if len(self.visited_features) == 0:
-            pn = len(self.df)
+            data_size = len(self.df)
         else:
-            pn = len(self.df.query(self._create_filter()))
+            data_size = len(self.df.query(self._create_filter()))
 
         gain = 0.0
 
         for attribute in attributes:
-            gain += (attribute.p + attribute.n) / pn * attribute.entropy
+            gain += (
+                (attribute.positives + attribute.negatives)
+                / data_size
+                * attribute.entropy
+            )
         return gain
 
     def _get_feature_attributes(self, feature_name: str) -> list[Attribute]:
         name = feature_name
         features: list[Attribute] = list()
 
-        # Get unique values from a feature column
+        # Get unique attributes from a feature column
         for attribute in self.df[name].unique():
+            # If it is a root, then calculate entropy over all dataset
             if len(self.visited_features) == 0:
-                pn = len(self.df[self.df[name] == attribute])
+                data_size = len(self.df[self.df[name] == attribute])
 
-                p = len(
+                positives = len(
                     self.df[
                         (self.df[name] == attribute)
                         & (self.df[self.class_name] == self.positive_label)
                     ]
                 )
+            # If it is not a root, calculate entropy of a sub tree
             else:
-                pn = len(
+                data_size = len(
                     self.df.query(
                         f"{name} == {self._do_quotes(name, attribute)} & "
                         f"{self._create_filter()}"
                     )
                 )
 
-                p = len(
+                positives = len(
                     self.df.query(
                         f"{self._create_filter()} & "
                         f"{name} == {self._do_quotes(name, attribute)} & "
@@ -248,14 +266,22 @@ class DecisionTree:
                     )
                 )
 
-            # Ignore attribute with no values
-            if pn == 0:
+            # Ignore attributes with no values
+            if data_size == 0:
                 continue
 
-            n = pn - p
+            negatives = data_size - positives
 
-            h_f = entropy(p, n, pn)
+            h_f = entropy(positives, negatives, data_size)
 
-            features.append(Attribute(label=attribute, p=p, n=n, pn=pn, entropy=h_f))
+            features.append(
+                Attribute(
+                    label=attribute,
+                    positives=positives,
+                    negatives=negatives,
+                    data_size=data_size,
+                    entropy=h_f,
+                )
+            )
 
         return features
