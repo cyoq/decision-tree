@@ -97,7 +97,7 @@ graph {self.direction.value}
 
             arrow = "-->"
             if link.text is not None:
-                arrow = f"--|{link.text}|-->"
+                arrow = f"-->|{link.text}|"
 
             link_str += f'{" " * 4}{from_} {arrow} {to}\n'
         return link_str
